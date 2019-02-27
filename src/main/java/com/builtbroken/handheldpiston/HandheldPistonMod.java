@@ -1,6 +1,5 @@
 package com.builtbroken.handheldpiston;
 
-import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -8,8 +7,6 @@ import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-import org.apache.logging.log4j.Logger;
 
 @Mod.EventBusSubscriber
 @Mod(modid = HandheldPistonMod.MODID, name = HandheldPistonMod.NAME, version = HandheldPistonMod.VERSION)
