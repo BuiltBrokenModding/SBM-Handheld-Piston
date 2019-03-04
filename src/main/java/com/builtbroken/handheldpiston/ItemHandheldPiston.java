@@ -45,7 +45,7 @@ public class ItemHandheldPiston extends Item {
 		this.setRegistryName(registryName);
 		this.setTranslationKey(HandheldPistonMod.MODID + "." + registryName);
 		this.setCreativeTab(CreativeTabs.TOOLS);
-		this.setTileEntityItemStackRenderer(new HandheldPistonRenderer());
+		this.setMaxStackSize(1);
 	}
 
 

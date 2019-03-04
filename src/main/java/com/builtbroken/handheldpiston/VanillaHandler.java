@@ -1,5 +1,7 @@
 package com.builtbroken.handheldpiston;
 
+import java.util.Arrays;
+
 import com.builtbroken.handheldpiston.api.Handler;
 import com.builtbroken.handheldpiston.api.HandlerManager;
 
@@ -15,7 +17,6 @@ import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.common.config.Configuration;
-import scala.actors.threadpool.Arrays;
 
 public class VanillaHandler extends ModHandler {
 

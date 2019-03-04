@@ -31,6 +31,7 @@ public class ClientEventHandler {
 
 	@SubscribeEvent
 	public static void modelRegister(ModelRegistryEvent event) {
+		HandheldPistonMod.piston.setTileEntityItemStackRenderer(new HandheldPistonRenderer());
 		ModelLoader.setCustomModelResourceLocation(HandheldPistonMod.piston, 0, mrl_piston);
 		ModelBakery.registerItemVariants(HandheldPistonMod.piston, mrl_piston_extended);
 	}
