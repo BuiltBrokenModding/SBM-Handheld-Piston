@@ -1,5 +1,6 @@
-package com.builtbroken.handheldpiston;
+package com.builtbroken.handheldpiston.api;
 
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.vecmath.Vector3d;
 
@@ -10,7 +11,9 @@ import net.minecraftforge.fml.common.eventhandler.Event;
 @Cancelable
 public class HandheldPistonMoveEvent extends Event {
 	
+	@Nonnull
 	private final PistonMoveType type;
+	
 	private final BlockPos newPos;
 	private final BlockPos oldPos;
 	
@@ -40,7 +43,7 @@ public class HandheldPistonMoveEvent extends Event {
 		this.velocityAdded = velocityAdded;
 	}
 	
-	static enum PistonMoveType {
+	public static enum PistonMoveType {
 		ENTITY,
 		PLAYER,
 		BLOCK;

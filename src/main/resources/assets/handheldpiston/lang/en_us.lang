@@ -1,0 +1,13 @@
+item.handheldpiston.handheldpiston.name=Hand-held Piston
+item.handheldpiston.handheldpiston.banned.block.name=This block cannot be pushed.
+item.handheldpiston.handheldpiston.banned.tile.name=This tile entity cannot be pushed.
+
+item.handheldpiston.handheldpiston.mode.all.info=Mode: §bAll
+item.handheldpiston.handheldpiston.mode.entity.info=Mode: §eEntity
+item.handheldpiston.handheldpiston.mode.self.info=Mode: §cSelf
+
+item.handheldpiston.handheldpiston.more.info=Hold §bSHIFT§f for more
+
+item.handheldpiston.handheldpiston.info=Adjusts piston settings
+item.handheldpiston.handheldpiston.use.info=§5While holding §bshift:
+item.handheldpiston.handheldpiston.wheel.info=§bMouse wheel §5to cycle modes
