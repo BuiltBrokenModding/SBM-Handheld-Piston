@@ -1,21 +1,17 @@
 package com.builtbroken.handheldpiston;
 
-import static com.builtbroken.handheldpiston.HandheldPistonMod.LOGGER;
-
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-
 import com.builtbroken.handheldpiston.api.HandlerManager;
-
-import akka.util.Collections;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.RegistryNamespaced;
 import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.fml.common.Loader;
-import scala.actors.threadpool.Arrays;
+
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
+import static com.builtbroken.handheldpiston.HandheldPistonMod.LOGGER;
 
 /**
  * Prefab for handling interaction for a mod or content package
@@ -26,14 +22,15 @@ import scala.actors.threadpool.Arrays;
 public class ModHandler
 {
     public static HashMap<String, Class<? extends ModHandler>> modSupportHandlerMap = new HashMap();
-    
+
     protected static RegistryNamespaced<ResourceLocation, Class<? extends TileEntity>> TILE_REGISTRY;
 
     /**
      * Called in the post init phase to handle any blocks that need to be blacklisted
      */
-    public void load(Configuration configuration) {
-    	
+    public void load(Configuration configuration)
+    {
+
     }
 
     /**

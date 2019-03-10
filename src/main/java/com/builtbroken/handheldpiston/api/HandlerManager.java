@@ -1,7 +1,6 @@
 package com.builtbroken.handheldpiston.api;
 
 import net.minecraft.block.Block;
-import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -9,8 +8,6 @@ import net.minecraft.world.World;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-
-import com.builtbroken.handheldpiston.ModHandler;
 
 /**
  * Handles interaction between {@link com.builtbroken.cardboardboxes.box.ItemBlockBox} and tiles
@@ -34,7 +31,7 @@ public class HandlerManager
 
     /** Primary manager */
     public final static HandlerManager INSTANCE = new HandlerManager();
-    
+
     /** If the banned block list is a whitelist **/
     public static boolean isWhitelist = false;
 
@@ -99,12 +96,16 @@ public class HandlerManager
      * @param pos   - position
      * @return result of the interaction
      */
-    public CanPushResult canPush(World world, BlockPos pos) {
+    public CanPushResult canPush(World world, BlockPos pos)
+    {
         Block block = world.getBlockState(pos).getBlock();
-        if (!blockBanList.contains(block.getRegistryName().toString()) || (isWhitelist && blockBanList.contains(block.getRegistryName().toString()))) {
+        if (!blockBanList.contains(block.getRegistryName().toString()) || (isWhitelist && blockBanList.contains(block.getRegistryName().toString())))
+        {
             TileEntity tile = world.getTileEntity(pos);
-            if (tile != null) {
-                if (!tileEntityBanList.contains(tile.getClass())) {
+            if (tile != null)
+            {
+                if (!tileEntityBanList.contains(tile.getClass()))
+                {
                     return CanPushResult.CAN_PUSH;
                 }
                 return CanPushResult.BANNED_TILE;

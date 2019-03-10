@@ -1,10 +1,11 @@
 package com.builtbroken.handheldpiston;
 
-public enum PistonMode {
-	
-	ALL,
-	ENTITY,
-	SELF;
+public enum PistonMode
+{
+
+    ALL,
+    ENTITY,
+    SELF;
 
 
     public static PistonMode get(int value)
@@ -34,6 +35,6 @@ public enum PistonMode {
             i = values().length - 1;
         }
         return values()[i];
-}
-	
+    }
+
 }
