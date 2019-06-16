@@ -1,16 +1,18 @@
 [
-{
-  "modid": "handheldpiston",
-  "name": "[SBM] Handheld Piston",
-  "description": "A single block mod adding a handheld piston which allows players to move blocks and entities just by holding it.",
-  "version": "${version}",
-  "mcversion": "${mcversion}",
-  "url": "",
-  "updateUrl": "",
-  "authorList": ["its_meow"],
-  "credits": "BuiltBrokenModding/DarkGuardsman for commission, its_meow for programming and art.",
-  "logoFile": "",
-  "screenshots": [],
-  "dependencies": []
-}
+  {
+    "modid": "handheldpiston",
+    "name": "[SBM] Handheld Piston",
+    "description": "A single block mod adding a handheld piston which allows players to move blocks and entities just by holding it.",
+    "version": "${version}",
+    "mcversion": "${mcversion}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": [
+      "its_meow"
+    ],
+    "credits": "BuiltBrokenModding/DarkGuardsman for commission, its_meow for programming and art.",
+    "logoFile": "",
+    "screenshots": [],
+    "dependencies": []
+  }
 ]

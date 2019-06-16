@@ -212,8 +212,6 @@ public class ItemHandheldPiston extends Item
                 //Pre handling
                 NBTTagCompound data = handler != null ? handler.preMoveBlock(player, world, pos, newPos) : null;
 
-
-
                 //Copy tile data
                 if (result != CanPushResult.NO_TILE)
                 {
