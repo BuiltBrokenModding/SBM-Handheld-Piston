@@ -1,13 +1,18 @@
-item.handheldpiston.handheldpiston.name=Hand-held Piston
-item.handheldpiston.handheldpiston.banned.block.name=This block cannot be pushed.
-item.handheldpiston.handheldpiston.banned.tile.name=This tile entity cannot be pushed.
+item.handheldpiston:basic.name=Basic Hand-held Piston
+item.handheldpiston:stkcy.name=Sticky Hand-held Piston
+item.handheldpiston:advanced.name=Advacned Hand-held Piston
 
-item.handheldpiston.handheldpiston.mode.all.info=Mode: §bAll
-item.handheldpiston.handheldpiston.mode.entity.info=Mode: §eEntity
-item.handheldpiston.handheldpiston.mode.self.info=Mode: §cSelf
+## Errors
+item.handheldpiston:banned.block.name=This block cannot be pushed.
+item.handheldpiston:banned.tile.name=This tile entity cannot be pushed.
 
-item.handheldpiston.handheldpiston.more.info=Hold §bSHIFT§f for more
+## Modes
+item.handheldpiston:mode.all.info=Mode: §bAll
+item.handheldpiston:mode.entity.info=Mode: §eEntity
+item.handheldpiston:mode.self.info=Mode: §cSelf
 
-item.handheldpiston.handheldpiston.info=Adjusts piston settings
-item.handheldpiston.handheldpiston.use.info=§5While holding §bshift:
-item.handheldpiston.handheldpiston.wheel.info=§bMouse wheel §5to cycle modes
+## Details
+item.handheldpiston:more.info=Hold §bSHIFT§f for more
+item.handheldpiston:info=Adjusts piston settings
+item.handheldpiston:use.info=§5While holding §bshift:
+item.handheldpiston:wheel.info=§bMouse wheel §5to cycle modes

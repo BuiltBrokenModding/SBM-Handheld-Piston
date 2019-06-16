@@ -49,7 +49,7 @@ public class ItemHandheldPiston extends Item
     public ItemHandheldPiston(ResourceLocation registryName, PistonMode... modes)
     {
         this.setRegistryName(registryName);
-        this.setTranslationKey(HandheldPiston.MODID + "." + registryName);
+        this.setTranslationKey(registryName.toString());
         this.setCreativeTab(CreativeTabs.TOOLS);
         this.setMaxStackSize(1);
 
@@ -337,11 +337,11 @@ public class ItemHandheldPiston extends Item
         }
         else if (result == CanPushResult.BANNED_TILE)
         {
-            player.sendStatusMessage(new TextComponentTranslation(this.getTranslationKey() + ".banned.tile.name"), true);
+            player.sendStatusMessage(new TextComponentTranslation("item." + HandheldPiston.MODID + ":banned.tile.name"), true);
         }
         else if (result == CanPushResult.BANNED_BLOCK)
         {
-            player.sendStatusMessage(new TextComponentTranslation(this.getTranslationKey() + ".banned.block.name"), true);
+            player.sendStatusMessage(new TextComponentTranslation("item." + HandheldPiston.MODID + ":banned.block.name"), true);
         }
         return EnumActionResult.FAIL;
     }
@@ -380,7 +380,7 @@ public class ItemHandheldPiston extends Item
     {
         toggleMode(stack, forward);
         player.inventoryContainer.detectAndSendChanges();
-        player.sendStatusMessage(new TextComponentTranslation(getTranslationKey() + ".mode." + getMode(stack).name().toLowerCase() + ".info"), true);
+        player.sendStatusMessage(new TextComponentTranslation("item." + HandheldPiston.MODID + ":mode." + getMode(stack).name().toLowerCase() + ".info"), true);
     }
 
     public void toggleMode(ItemStack stack, boolean forward)
@@ -388,8 +388,7 @@ public class ItemHandheldPiston extends Item
         if (modes.size() > 1)
         {
             final PistonMode currentMode = getMode(stack);
-            PistonMode nextMode = null;
-
+            PistonMode nextMode = currentMode;
             do
             {
                 nextMode = forward ? nextMode.next() : nextMode.prev();
@@ -425,16 +424,16 @@ public class ItemHandheldPiston extends Item
     public void addInformation(ItemStack stack, World worldIn, java.util.List<String> lines, ITooltipFlag flagIn)
     {
         super.addInformation(stack, worldIn, lines, flagIn);
-        lines.add(I18n.format(getTranslationKey() + ".mode." + getMode(stack).name().toLowerCase() + ".info"));
+        lines.add(I18n.format("item." + HandheldPiston.MODID + ":mode." + getMode(stack).name().toLowerCase() + ".info"));
         if (GuiScreen.isShiftKeyDown())
         {
-            lines.add(I18n.format(getTranslationKey() + ".info"));
-            lines.add(I18n.format(getTranslationKey() + ".use.info"));
-            lines.add(I18n.format(getTranslationKey() + ".wheel.info"));
+            lines.add(I18n.format("item." + HandheldPiston.MODID + ":info"));
+            lines.add(I18n.format("item." + HandheldPiston.MODID + ":use.info"));
+            lines.add(I18n.format("item." + HandheldPiston.MODID + ":wheel.info"));
         }
         else
         {
-            lines.add(I18n.format(getTranslationKey() + ".more.info"));
+            lines.add(I18n.format("item." + HandheldPiston.MODID + ":more.info"));
         }
     }
 
