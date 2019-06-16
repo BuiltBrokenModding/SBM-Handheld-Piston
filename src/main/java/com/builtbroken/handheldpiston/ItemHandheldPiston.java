@@ -49,28 +49,38 @@ public class ItemHandheldPiston extends Item
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
                                       EnumFacing facing, float hitX, float hitY, float hitZ)
     {
-        BlockPos newPos = pos.offset(facing.getOpposite());
-        IBlockState oldState = world.getBlockState(pos);
-        IBlockState filledState = world.getBlockState(newPos);
-        ItemStack stack = player.getHeldItem(hand);
-        if (!stack.hasTagCompound())
-        {
-            stack.setTagCompound(new NBTTagCompound());
-        }
-        if (world.getTotalWorldTime() - stack.getTagCompound().getInteger("extendTick") < 15)
+        final BlockPos newPos = pos.offset(facing.getOpposite());
+        final IBlockState oldState = world.getBlockState(pos);
+        final IBlockState filledState = world.getBlockState(newPos);
+        final ItemStack stack = player.getHeldItem(hand);
+
+        //Fail out if we are already extended
+        if (world.getTotalWorldTime() - getExtendedTime(stack) < 15) //TODO make config driven
         {
             return EnumActionResult.FAIL;
         }
+
+        //Check if we can push
         if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, facing))
         {
+            //Do push
             return this.tryToMoveBlock(player, world, pos, newPos, hand, facing, oldState, filledState);
         }
-        return super.onItemUse(player, world, pos, hand, facing, hitX, hitY, hitZ);
+        return EnumActionResult.PASS;
+    }
+
+    protected int getExtendedTime(ItemStack stack)
+    {
+        if (stack.getTagCompound() != null)
+        {
+            return stack.getTagCompound().getInteger("extendTick");
+        }
+        return 0;
     }
 
     protected boolean canTryPush(World world, IBlockState oldState, IBlockState filledState, BlockPos pos, BlockPos newPos, EnumHand hand, EntityPlayer player, EnumFacing facing)
     {
-        ItemStack stack = player.getHeldItem(hand);
+        final ItemStack stack = player.getHeldItem(hand);
         if (newPos.getY() < world.getHeight() && newPos.getY() > 0)
         {
             boolean pushable = (oldState.getPushReaction() == EnumPushReaction.NORMAL || oldState.getPushReaction() == EnumPushReaction.PUSH_ONLY);
@@ -92,11 +102,6 @@ public class ItemHandheldPiston extends Item
                             return true;
                         }
                     }
-
-                }
-                else
-                {
-
                 }
             }
             else
@@ -190,12 +195,9 @@ public class ItemHandheldPiston extends Item
     protected EnumActionResult tryToMoveBlock(EntityPlayer player, World world, BlockPos pos, BlockPos newPos, EnumHand hand, EnumFacing facing, IBlockState oldState, IBlockState filledState)
     {
         //Check that we can pick up block
-        CanPushResult result = HandlerManager.INSTANCE.canPush(world, pos);
+        final CanPushResult result = HandlerManager.INSTANCE.canPush(world, pos);
         if (result == CanPushResult.CAN_PUSH || result == CanPushResult.NO_TILE)
         {
-
-            Handler handler = HandlerManager.INSTANCE.getHandler(oldState.getBlock());
-
             if (oldState.getPushReaction() == EnumPushReaction.DESTROY)
             {
                 float chance = oldState.getBlock() instanceof BlockSnow ? -1.0f : 1.0f;
@@ -205,48 +207,67 @@ public class ItemHandheldPiston extends Item
             }
             else
             {
-                NBTTagCompound data = new NBTTagCompound();
-                if (handler != null)
-                {
-                    data = handler.preMoveBlock(player, world, pos, newPos);
-                }
-                world.setBlockState(newPos, oldState);
+                final Handler handler = HandlerManager.INSTANCE.getHandler(oldState.getBlock());
+
+                //Pre handling
+                NBTTagCompound data = handler != null ? handler.preMoveBlock(player, world, pos, newPos) : null;
+
+
+
+                //Copy tile data
                 if (result != CanPushResult.NO_TILE)
                 {
-                    TileEntity te = world.getTileEntity(pos);
+                    final TileEntity oldTile = world.getTileEntity(pos);
                     //Copy tile data
-                    NBTTagCompound compound = new NBTTagCompound();
-                    te.writeToNBT(compound);
+                    final NBTTagCompound compound = new NBTTagCompound();
+                    oldTile.writeToNBT(compound);
 
                     //Remove location data
                     compound.removeTag("x");
                     compound.removeTag("y");
                     compound.removeTag("z");
 
+                    //Kill old
                     world.removeTileEntity(pos);
+                    world.setBlockToAir(pos);
 
-                    TileEntity te2 = te.create(world, compound);
-                    if (te2 != null)
+                    //Place new
+                    world.setBlockState(newPos, oldState);
+
+                    //Create new tile
+                    final TileEntity newTile = oldTile.create(world, compound);
+                    if (newTile != null)
                     {
-                        te2.readFromNBT(compound);
-                        te2.setPos(newPos);
-                        world.setTileEntity(newPos, te2);
-                        te2.updateContainingBlockInfo();
-                        if (te2 instanceof ITickable)
+                        newTile.readFromNBT(compound);
+                        newTile.setPos(newPos);
+                        world.setTileEntity(newPos, newTile);
+                        newTile.updateContainingBlockInfo();
+                        if (newTile instanceof ITickable)
                         {
-                            ((ITickable) te2).update();
+                            ((ITickable) newTile).update();
                         }
                     }
                 }
-                world.setBlockToAir(pos);
+                else
+                {
+                    world.setBlockToAir(pos);
+                    world.setBlockState(newPos, oldState);
+                }
+
+                //Post handling
                 if (handler != null)
                 {
-                    handler.postMoveBlock(player, world, pos, newPos, data);
+                    handler.postMoveBlock(player, world, pos, newPos, data != null ? data : new NBTTagCompound());
                 }
             }
+
+            //Trigger updates
+            this.updateEverything(world, pos, newPos, oldState, filledState);
+
+            //Animation
             this.setExtended(player.getHeldItem(hand), world);
             world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
-            this.updateEverything(world, pos, newPos, oldState, filledState);
+
             return EnumActionResult.SUCCESS;
         }
         else if (result == CanPushResult.BANNED_TILE)
