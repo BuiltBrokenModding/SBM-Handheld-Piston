@@ -92,11 +92,11 @@ public class EntityEvent
         {
             velY /= 2;
         }
-        if (mode == PistonMode.SELF && entity instanceof EntityPlayer)
+        if (mode == PistonMode.SELF && entity instanceof EntityPlayer) //TODO see if this runs anymore
         {
-            velX *= 1.5F;
-            velY *= 2.5F;
-            velZ *= 1.5F;
+            velX *= 3F; //TODO add config
+            velY *= 3F;
+            velZ *= 3F;
         }
         HandheldPistonMoveEvent event = new HandheldPistonMoveEvent(entity instanceof EntityPlayer ? HandheldPistonMoveEvent.PistonMoveType.PLAYER : HandheldPistonMoveEvent.PistonMoveType.ENTITY, null, null, new Vector3d(velX, velY, velZ));
         MinecraftForge.EVENT_BUS.post(event);

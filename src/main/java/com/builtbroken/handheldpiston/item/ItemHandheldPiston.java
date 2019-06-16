@@ -24,6 +24,7 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.TextComponentTranslation;
 import net.minecraft.world.World;
 import net.minecraftforge.common.ForgeHooks;
@@ -107,11 +108,29 @@ public class ItemHandheldPiston extends Item
             return EnumActionResult.FAIL;
         }
 
-        //Check if we can push
-        if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, facing))
+        if (mode.canPushBlocks)
         {
-            //Do push
-            return this.tryToMoveBlock(player, world, pos, newPos, hand, facing, oldState, filledState);
+            //Check if we can push
+            if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, facing))
+            {
+                //Do push
+                return this.tryToMoveBlock(player, world, pos, newPos, hand, facing, oldState, filledState);
+            }
+        }
+        else if (mode == PistonMode.SELF)
+        {
+            Vec3d vector = player.getLookVec().scale(-1).normalize().scale(2); //TODO config
+            player.addVelocity(vector.x, vector.y, vector.z);
+
+            //audio
+            world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
+
+            //animation
+            this.setExtended(stack, world);
+        }
+        else
+        {
+            pushPlayer(world, pos, player, facing, stack, mode);
         }
         return EnumActionResult.SUCCESS;
     }
@@ -126,7 +145,7 @@ public class ItemHandheldPiston extends Item
             boolean hardness = oldState.getBlockHardness(world, pos) != -1.0F;
             boolean replaceable = (filledState.getBlock() == Blocks.AIR || filledState.getBlock().isReplaceable(world, newPos));
             boolean extras = oldState.getBlock() != Blocks.OBSIDIAN && world.getWorldBorder().contains(pos);
-            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && mode.canPushBlocks)
+            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras)
             {
                 if (!world.isRemote)
                 {
@@ -145,19 +164,24 @@ public class ItemHandheldPiston extends Item
             }
             else
             {
-                //Movement
-                final Vector3d vector = EntityEvent.getVelocityForPush(facing, player, stack, mode);
-                player.addVelocity(vector.getX(), vector.getY(), vector.getZ());
-
-                //audio
-                world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
-
-                //animation
-                this.setExtended(stack, world);
+                pushPlayer(world, pos, player, facing, stack, mode);
             }
 
         }
         return false;
+    }
+
+    public void pushPlayer(World world, BlockPos pos, EntityPlayer player, EnumFacing facing, ItemStack pistonStack, PistonMode mode)
+    {
+        //Movement
+        final Vector3d vector = EntityEvent.getVelocityForPush(facing, player, pistonStack, mode);
+        player.addVelocity(vector.getX(), vector.getY(), vector.getZ());
+
+        //audio
+        world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
+
+        //animation
+        this.setExtended(pistonStack, world);
     }
 
     public static EnumFacing getPlacement(EnumFacing blockSide, float hitX, float hitY, float hitZ)
