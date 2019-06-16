@@ -1,4 +1,4 @@
-package com.builtbroken.handheldpiston;
+package com.builtbroken.handheldpiston.item;
 
 public enum PistonMode
 {

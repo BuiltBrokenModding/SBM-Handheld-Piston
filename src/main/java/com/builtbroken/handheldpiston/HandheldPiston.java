@@ -1,5 +1,10 @@
 package com.builtbroken.handheldpiston;
 
+import com.builtbroken.handheldpiston.item.ItemHandheldPiston;
+import com.builtbroken.handheldpiston.item.PistonMode;
+import com.builtbroken.handheldpiston.mod.LazyModLoader;
+import com.builtbroken.handheldpiston.mod.ModHandler;
+import com.builtbroken.handheldpiston.mod.vanilla.VanillaHandler;
 import com.builtbroken.handheldpiston.network.MouseHandler;
 import com.builtbroken.handheldpiston.network.MousePacket;
 import net.minecraft.entity.EntityLivingBase;
@@ -8,7 +13,6 @@ import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.SoundCategory;
-import net.minecraftforge.common.config.Configuration;
 import net.minecraftforge.event.RegistryEvent;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -23,22 +27,19 @@ import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
 
 import javax.vecmath.Vector3d;
-import java.io.File;
 
 @Mod.EventBusSubscriber
-@Mod(modid = HandheldPistonMod.MODID, name = HandheldPistonMod.NAME, version = HandheldPistonMod.VERSION)
-public class HandheldPistonMod
+@Mod(modid = HandheldPiston.MODID, name = HandheldPiston.NAME, version = HandheldPiston.VERSION)
+public class HandheldPiston
 {
 
     public static final String MODID = "handheldpiston";
     public static final String NAME = "[SBM] Handheld Piston";
     public static final String VERSION = "1.0.0";
 
-    public static final SimpleNetworkWrapper INSTANCE = NetworkRegistry.INSTANCE.newSimpleChannel(HandheldPistonMod.MODID);
+    public static final SimpleNetworkWrapper NETWORK = NetworkRegistry.INSTANCE.newSimpleChannel(HandheldPiston.MODID);
 
     public static Logger LOGGER = null;
-
-    private static Configuration config;
 
     public static final ItemHandheldPiston piston = new ItemHandheldPiston("handheldpiston");
 
@@ -46,22 +47,20 @@ public class HandheldPistonMod
     public void preInit(FMLPreInitializationEvent event)
     {
         LOGGER = event.getModLog();
-        config = new Configuration(new File(event.getModConfigurationDirectory(), "bbm/handheld_piston.cfg"));
-        INSTANCE.registerMessage(MouseHandler.class, MousePacket.class, 0, Side.SERVER);
+        NETWORK.registerMessage(MouseHandler.class, MousePacket.class, 0, Side.SERVER);
+        ModHandler.modSupportHandlerMap.put("minecraft", new LazyModLoader(() -> new VanillaHandler()));
     }
 
     @EventHandler
     public void init(FMLInitializationEvent event)
     {
-        ModHandler.modSupportHandlerMap.put("minecraft", VanillaHandler.class);
+        ModHandler.loadHandlerData();
     }
 
     @EventHandler
     public void postInit(FMLPostInitializationEvent event)
     {
-        config.load();
-        ModHandler.loadHandlerData(config);
-        config.save();
+
     }
 
     @SubscribeEvent

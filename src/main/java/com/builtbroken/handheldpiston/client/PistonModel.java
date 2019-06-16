@@ -1,6 +1,6 @@
 package com.builtbroken.handheldpiston.client;
 
-import com.builtbroken.handheldpiston.HandheldPistonMod;
+import com.builtbroken.handheldpiston.HandheldPiston;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
@@ -67,7 +67,7 @@ public class PistonModel implements IBakedModel
     @Override
     public Pair<? extends IBakedModel, Matrix4f> handlePerspective(TransformType type)
     {
-        ((HandheldPistonRenderer) HandheldPistonMod.piston.getTileEntityItemStackRenderer()).transform = type;
+        ((HandheldPistonRenderer) HandheldPiston.piston.getTileEntityItemStackRenderer()).transform = type;
         return Pair.of(this, oldModel.handlePerspective(type).getRight());
     }
 

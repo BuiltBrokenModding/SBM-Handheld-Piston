@@ -1,7 +1,11 @@
 package com.builtbroken.handheldpiston.api;
 
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumActionResult;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
@@ -13,7 +17,12 @@ import net.minecraft.world.World;
  */
 public class Handler
 {
-
+    public EnumActionResult canEdit(World world, IBlockState state, BlockPos oldPos, BlockPos newPos,
+                                    EntityPlayer player, EnumFacing facing, EnumHand hand,
+                                    boolean mayPlace, boolean canEditBlock, boolean canEditWithTool)
+    {
+        return EnumActionResult.PASS;
+    }
     /**
      * Called before movement of the tile
      *

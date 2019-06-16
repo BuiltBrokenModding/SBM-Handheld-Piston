@@ -1,5 +1,6 @@
-package com.builtbroken.handheldpiston;
+package com.builtbroken.handheldpiston.item;
 
+import com.builtbroken.handheldpiston.HandheldPiston;
 import com.builtbroken.handheldpiston.api.CanPushResult;
 import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent;
 import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent.PistonMoveType;
@@ -39,22 +40,29 @@ public class ItemHandheldPiston extends Item
     public ItemHandheldPiston(String registryName)
     {
         this.setRegistryName(registryName);
-        this.setTranslationKey(HandheldPistonMod.MODID + "." + registryName);
+        this.setTranslationKey(HandheldPiston.MODID + "." + registryName);
         this.setCreativeTab(CreativeTabs.TOOLS);
         this.setMaxStackSize(1);
     }
 
 
     @Override
+    public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand)
+    {
+        return onItemUse(player, world, pos, hand, side, hitX, hitY, hitZ);
+    }
+
+    @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
                                       EnumFacing sideHit, float hitX, float hitY, float hitZ)
     {
+
         final ItemStack stack = player.getHeldItem(hand);
         final PistonMode mode = getMode(stack);
         EnumFacing facing = sideHit;
-        if(mode == PistonMode.ADVANCED)
+        if (mode == PistonMode.ADVANCED)
         {
-           facing = getPlacement(sideHit, hitX, hitY, hitZ);
+            facing = getPlacement(sideHit, hitX, hitY, hitZ);
         }
 
         final BlockPos newPos = pos.offset(facing.getOpposite());
@@ -74,7 +82,7 @@ public class ItemHandheldPiston extends Item
             //Do push
             return this.tryToMoveBlock(player, world, pos, newPos, hand, facing, oldState, filledState);
         }
-        return EnumActionResult.PASS;
+        return EnumActionResult.SUCCESS;
     }
 
     protected int getExtendedTime(ItemStack stack)
@@ -95,7 +103,7 @@ public class ItemHandheldPiston extends Item
             boolean hardness = oldState.getBlockHardness(world, pos) != -1.0F;
             boolean replaceable = (filledState.getBlock() == Blocks.AIR || filledState.getBlock().isReplaceable(world, newPos));
             boolean extras = oldState.getBlock() != Blocks.OBSIDIAN && world.getWorldBorder().contains(pos);
-            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && HandheldPistonMod.piston.getMode(stack).canPushBlocks)
+            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && HandheldPiston.piston.getMode(stack).canPushBlocks)
             {
                 if (!world.isRemote)
                 {
@@ -203,9 +211,24 @@ public class ItemHandheldPiston extends Item
 
     protected boolean canEdit(World world, IBlockState state, BlockPos pos, BlockPos newPos, EntityPlayer player, EnumFacing facing, EnumHand hand)
     {
-        return world.mayPlace(state.getBlock(), newPos, false, EnumFacing.UP, player) &&
-                player.canPlayerEdit(newPos, EnumFacing.UP, new ItemStack(state.getBlock())) &&
-                player.canPlayerEdit(pos, facing, player.getHeldItem(hand));
+        //Normal edit checks
+        boolean place = world.mayPlace(state.getBlock(), newPos, false, EnumFacing.UP, player);
+        boolean edit1 = player.canPlayerEdit(newPos, EnumFacing.UP, new ItemStack(state.getBlock()));
+        boolean edit2 = player.canPlayerEdit(pos, facing, player.getHeldItem(hand));
+
+        //Handler override
+        final Handler handler = HandlerManager.INSTANCE.getHandler(state.getBlock());
+        if (handler != null)
+        {
+            final EnumActionResult result = handler.canEdit(world, state, pos, newPos, player, facing, hand, place, edit1, edit2);
+            if (result != EnumActionResult.PASS)
+            {
+                return result == EnumActionResult.SUCCESS;
+            }
+        }
+
+
+        return place && edit1 && edit2;
     }
 
     public static Vector3d getVelocityForPush(EnumFacing facing, EntityLivingBase entity, ItemStack stack)
@@ -253,7 +276,7 @@ public class ItemHandheldPiston extends Item
         {
             velY /= 2;
         }
-        if (HandheldPistonMod.piston.getMode(stack) == PistonMode.SELF && entity instanceof EntityPlayer)
+        if (HandheldPiston.piston.getMode(stack) == PistonMode.SELF && entity instanceof EntityPlayer)
         {
             velX *= 1.5F;
             velY *= 2.5F;
