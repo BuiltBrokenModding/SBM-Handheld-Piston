@@ -1,6 +1,6 @@
 package com.builtbroken.handheldpiston.network;
 
-import com.builtbroken.handheldpiston.HandheldPiston;
+import com.builtbroken.handheldpiston.item.ItemHandheldPiston;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.network.simpleimpl.IMessage;
@@ -17,9 +17,9 @@ public class MouseHandler implements IMessageHandler<MousePacket, IMessage>
         EntityPlayerMP player = ctx.getServerHandler().player;
 
         ItemStack stack = player.inventory.getStackInSlot(p.slot);
-        if (stack != null && stack.getItem() == HandheldPiston.piston)
+        if (stack != null && stack.getItem() instanceof ItemHandheldPiston)
         {
-            HandheldPiston.piston.handleMouseWheelAction(stack, player, false, p.forward);
+            ((ItemHandheldPiston)stack.getItem()).handleMouseWheelAction(stack, player, false, p.forward);
         }
 
         return null;

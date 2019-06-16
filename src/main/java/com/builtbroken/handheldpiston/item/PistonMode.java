@@ -2,16 +2,18 @@ package com.builtbroken.handheldpiston.item;
 
 public enum PistonMode
 {
-    ALL(true),
-    ENTITY(false),
-    SELF(false),
-    ADVANCED(true);
+    ALL(true, true),
+    ENTITY(false, true),
+    SELF(false, false),
+    ADVANCED(true, false);
 
     public final boolean canPushBlocks;
+    public final boolean canPushEntity;
 
-    PistonMode(boolean canPushBlocks)
+    PistonMode(boolean canPushBlocks, boolean canPushEntity)
     {
         this.canPushBlocks = canPushBlocks;
+        this.canPushEntity = canPushEntity;
     }
 
     public static PistonMode get(int value)

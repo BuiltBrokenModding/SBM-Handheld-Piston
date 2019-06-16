@@ -3,7 +3,6 @@ package com.builtbroken.handheldpiston.item;
 import com.builtbroken.handheldpiston.HandheldPiston;
 import com.builtbroken.handheldpiston.api.CanPushResult;
 import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent;
-import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent.PistonMoveType;
 import com.builtbroken.handheldpiston.api.Handler;
 import com.builtbroken.handheldpiston.api.HandlerManager;
 import net.minecraft.block.BlockSnow;
@@ -18,6 +17,7 @@ import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
+import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -30,21 +30,52 @@ import net.minecraftforge.common.ForgeHooks;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.common.util.BlockSnapshot;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
 
+import javax.annotation.Nullable;
 import javax.vecmath.Vector3d;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class ItemHandheldPiston extends Item
 {
+    public static final String NBT_MODE = "toolMode";
+    public static final String NBT_TICKS = "extendTick";
 
-    public ItemHandheldPiston(String registryName)
+    public final Set<PistonMode> modes = new HashSet();
+
+    public ItemHandheldPiston(ResourceLocation registryName, PistonMode... modes)
     {
         this.setRegistryName(registryName);
         this.setTranslationKey(HandheldPiston.MODID + "." + registryName);
         this.setCreativeTab(CreativeTabs.TOOLS);
         this.setMaxStackSize(1);
-    }
 
+        for (PistonMode mode : modes)
+        {
+            this.modes.add(mode);
+        }
+
+        //handles extended state
+        this.addPropertyOverride(new ResourceLocation("extending"), new IItemPropertyGetter()
+        {
+            @SideOnly(Side.CLIENT)
+            public float apply(ItemStack stack, @Nullable World worldIn, @Nullable EntityLivingBase entityIn)
+            {
+                if (stack.getItem() == ItemHandheldPiston.this)
+                {
+                    int ticks = ((ItemHandheldPiston) stack.getItem()).getExtendedTime(stack);
+                    if (worldIn != null && worldIn.getTotalWorldTime() - ticks < 15) //TODO make config driven
+                    {
+                        return 1.0F;
+                    }
+                }
+                return 0.0F;
+            }
+        });
+    }
 
     @Override
     public EnumActionResult onItemUseFirst(EntityPlayer player, World world, BlockPos pos, EnumFacing side, float hitX, float hitY, float hitZ, EnumHand hand)
@@ -85,25 +116,17 @@ public class ItemHandheldPiston extends Item
         return EnumActionResult.SUCCESS;
     }
 
-    protected int getExtendedTime(ItemStack stack)
-    {
-        if (stack.getTagCompound() != null)
-        {
-            return stack.getTagCompound().getInteger("extendTick");
-        }
-        return 0;
-    }
-
     protected boolean canTryPush(World world, IBlockState oldState, IBlockState filledState, BlockPos pos, BlockPos newPos, EnumHand hand, EntityPlayer player, EnumFacing facing)
     {
         final ItemStack stack = player.getHeldItem(hand);
+        final PistonMode mode = getMode(stack);
         if (newPos.getY() < world.getHeight() && newPos.getY() > 0)
         {
             boolean pushable = (oldState.getPushReaction() == EnumPushReaction.NORMAL || oldState.getPushReaction() == EnumPushReaction.PUSH_ONLY);
             boolean hardness = oldState.getBlockHardness(world, pos) != -1.0F;
             boolean replaceable = (filledState.getBlock() == Blocks.AIR || filledState.getBlock().isReplaceable(world, newPos));
             boolean extras = oldState.getBlock() != Blocks.OBSIDIAN && world.getWorldBorder().contains(pos);
-            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && HandheldPiston.piston.getMode(stack).canPushBlocks)
+            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && mode.canPushBlocks)
             {
                 if (!world.isRemote)
                 {
@@ -122,9 +145,14 @@ public class ItemHandheldPiston extends Item
             }
             else
             {
-                Vector3d v = getVelocityForPush(facing, player, stack);
-                player.addVelocity(v.getX(), v.getY(), v.getZ());
+                //Movement
+                final Vector3d vector = EntityEvent.getVelocityForPush(facing, player, stack, mode);
+                player.addVelocity(vector.getX(), vector.getY(), vector.getZ());
+
+                //audio
                 world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
+
+                //animation
                 this.setExtended(stack, world);
             }
 
@@ -231,67 +259,6 @@ public class ItemHandheldPiston extends Item
         return place && edit1 && edit2;
     }
 
-    public static Vector3d getVelocityForPush(EnumFacing facing, EntityLivingBase entity, ItemStack stack)
-    {
-        double velX = 0.5;
-        double velY = 0.5;
-        double velZ = 0.5;
-        if (facing == EnumFacing.UP)
-        {
-            velX = 0;
-            velY = Math.abs(velY);
-            velZ = 0;
-        }
-        if (facing == EnumFacing.DOWN)
-        {
-            velX = 0;
-            velY = -Math.abs(velY);
-            velZ = 0;
-        }
-        if (facing == EnumFacing.NORTH)
-        {
-            velX = 0;
-            velY = 0;
-            velZ = -Math.abs(velZ);
-        }
-        if (facing == EnumFacing.EAST)
-        {
-            velX = Math.abs(velX);
-            velY = 0;
-            velZ = 0;
-        }
-        if (facing == EnumFacing.SOUTH)
-        {
-            velX = 0;
-            velY = 0;
-            velZ = Math.abs(velZ);
-        }
-        if (facing == EnumFacing.WEST)
-        {
-            velX = -Math.abs(velX);
-            velY = 0;
-            velZ = 0;
-        }
-        if (!entity.onGround)
-        {
-            velY /= 2;
-        }
-        if (HandheldPiston.piston.getMode(stack) == PistonMode.SELF && entity instanceof EntityPlayer)
-        {
-            velX *= 1.5F;
-            velY *= 2.5F;
-            velZ *= 1.5F;
-        }
-        HandheldPistonMoveEvent event = new HandheldPistonMoveEvent(entity instanceof EntityPlayer ? PistonMoveType.PLAYER : PistonMoveType.ENTITY, null, null, new Vector3d(velX, velY, velZ));
-        MinecraftForge.EVENT_BUS.post(event);
-        if (!event.isCanceled())
-        {
-            return event.velocityAdded;
-        }
-        return new Vector3d(0, 0, 0);
-    }
-
-
     protected EnumActionResult tryToMoveBlock(EntityPlayer player, World world, BlockPos pos, BlockPos newPos, EnumHand hand, EnumFacing facing, IBlockState oldState, IBlockState filledState)
     {
         //Check that we can pick up block
@@ -397,10 +364,17 @@ public class ItemHandheldPiston extends Item
         {
             stack.setTagCompound(new NBTTagCompound());
         }
-        stack.getTagCompound().setLong("extendTick", world.getTotalWorldTime());
+        stack.getTagCompound().setLong(NBT_TICKS, world.getTotalWorldTime());
     }
 
-    public static final String NBT_MODE = "toolMode";
+    protected int getExtendedTime(ItemStack stack)
+    {
+        if (stack.getTagCompound() != null)
+        {
+            return stack.getTagCompound().getInteger(NBT_TICKS);
+        }
+        return 0;
+    }
 
     public void handleMouseWheelAction(ItemStack stack, EntityPlayer player, boolean ctrl, boolean forward)
     {
@@ -411,7 +385,22 @@ public class ItemHandheldPiston extends Item
 
     public void toggleMode(ItemStack stack, boolean forward)
     {
-        setMode(stack, forward ? getMode(stack).next() : getMode(stack).prev());
+        if (modes.size() > 1)
+        {
+            final PistonMode currentMode = getMode(stack);
+            PistonMode nextMode = null;
+
+            do
+            {
+                nextMode = forward ? nextMode.next() : nextMode.prev();
+                if (modes.contains(nextMode))
+                {
+                    setMode(stack, nextMode);
+                    return;
+                }
+            }
+            while (nextMode != currentMode);
+        }
     }
 
     public PistonMode getMode(ItemStack stack)
@@ -431,7 +420,6 @@ public class ItemHandheldPiston extends Item
         }
         stack.getTagCompound().setInteger(NBT_MODE, mode.ordinal());
     }
-
 
     @Override
     public void addInformation(ItemStack stack, World worldIn, java.util.List<String> lines, ITooltipFlag flagIn)

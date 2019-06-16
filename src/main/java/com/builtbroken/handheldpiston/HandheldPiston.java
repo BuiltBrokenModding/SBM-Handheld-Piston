@@ -7,26 +7,18 @@ import com.builtbroken.handheldpiston.mod.ModHandler;
 import com.builtbroken.handheldpiston.mod.vanilla.VanillaHandler;
 import com.builtbroken.handheldpiston.network.MouseHandler;
 import com.builtbroken.handheldpiston.network.MousePacket;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.event.RegistryEvent;
-import net.minecraftforge.event.entity.player.PlayerInteractEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventHandler;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.network.NetworkRegistry;
 import net.minecraftforge.fml.common.network.simpleimpl.SimpleNetworkWrapper;
 import net.minecraftforge.fml.relauncher.Side;
 import org.apache.logging.log4j.Logger;
-
-import javax.vecmath.Vector3d;
 
 @Mod.EventBusSubscriber
 @Mod(modid = HandheldPiston.MODID, name = HandheldPiston.NAME, version = HandheldPiston.VERSION)
@@ -41,7 +33,9 @@ public class HandheldPiston
 
     public static Logger LOGGER = null;
 
-    public static final ItemHandheldPiston piston = new ItemHandheldPiston("handheldpiston");
+    public static final ResourceLocation ITEM_BASIC = new ResourceLocation(MODID, "basic");
+    public static final ResourceLocation ITEM_STICKY = new ResourceLocation(MODID, "sticky");
+    public static final ResourceLocation ITEM_ADVANCED = new ResourceLocation(MODID, "advanced");
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -57,34 +51,11 @@ public class HandheldPiston
         ModHandler.loadHandlerData();
     }
 
-    @EventHandler
-    public void postInit(FMLPostInitializationEvent event)
-    {
-
-    }
-
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event)
     {
-        event.getRegistry().registerAll(piston);
-    }
-
-    @SubscribeEvent
-    public static void entityInteract(PlayerInteractEvent.EntityInteract e)
-    {
-        if (e.getItemStack().getItem() != piston || !(e.getTarget() instanceof EntityLivingBase))
-        {
-            return;
-        }
-        if (piston.getMode(e.getItemStack()) == PistonMode.SELF)
-        {
-            return;
-        }
-        float rot = e.getEntityPlayer().getRotationYawHead();
-        EnumFacing facing = EnumFacing.fromAngle(rot);
-        Vector3d vec = ItemHandheldPiston.getVelocityForPush(facing, (EntityLivingBase) e.getTarget(), e.getItemStack());
-        e.getTarget().addVelocity(vec.getX(), vec.getY(), vec.getZ());
-        e.getWorld().playSound((EntityPlayer) null, e.getEntityPlayer().getPosition(), SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, e.getWorld().rand.nextFloat() * 0.25F + 0.6F);
-        ItemHandheldPiston.setExtended(e.getEntityPlayer().getHeldItem(e.getHand()), e.getWorld());
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_BASIC, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_STICKY, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_ADVANCED, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF, PistonMode.ADVANCED));
     }
 }
