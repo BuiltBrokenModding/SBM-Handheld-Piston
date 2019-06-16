@@ -47,12 +47,20 @@ public class ItemHandheldPiston extends Item
 
     @Override
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
-                                      EnumFacing facing, float hitX, float hitY, float hitZ)
+                                      EnumFacing sideHit, float hitX, float hitY, float hitZ)
     {
+        final ItemStack stack = player.getHeldItem(hand);
+        final PistonMode mode = getMode(stack);
+        EnumFacing facing = sideHit;
+        if(mode == PistonMode.ADVANCED)
+        {
+           facing = getPlacement(sideHit, hitX, hitY, hitZ);
+        }
+
         final BlockPos newPos = pos.offset(facing.getOpposite());
         final IBlockState oldState = world.getBlockState(pos);
         final IBlockState filledState = world.getBlockState(newPos);
-        final ItemStack stack = player.getHeldItem(hand);
+
 
         //Fail out if we are already extended
         if (world.getTotalWorldTime() - getExtendedTime(stack) < 15) //TODO make config driven
@@ -87,7 +95,7 @@ public class ItemHandheldPiston extends Item
             boolean hardness = oldState.getBlockHardness(world, pos) != -1.0F;
             boolean replaceable = (filledState.getBlock() == Blocks.AIR || filledState.getBlock().isReplaceable(world, newPos));
             boolean extras = oldState.getBlock() != Blocks.OBSIDIAN && world.getWorldBorder().contains(pos);
-            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && HandheldPistonMod.piston.getMode(stack) == PistonMode.ALL)
+            if (((pushable && hardness && replaceable) || oldState.getPushReaction() == EnumPushReaction.DESTROY) && extras && HandheldPistonMod.piston.getMode(stack).canPushBlocks)
             {
                 if (!world.isRemote)
                 {
@@ -114,6 +122,75 @@ public class ItemHandheldPiston extends Item
 
         }
         return false;
+    }
+
+    public static EnumFacing getPlacement(EnumFacing blockSide, float hitX, float hitY, float hitZ)
+    {
+        final float spacing = 0.3f;
+        EnumFacing placement;
+
+        if (blockSide == EnumFacing.UP || blockSide == EnumFacing.DOWN)
+        {
+            //WEST
+            boolean right = hitX <= spacing;
+            //EAST
+            boolean left = hitX >= (1 - spacing);
+            //NORTH
+            boolean down = hitZ <= spacing;
+            //SOUTH
+            boolean up = hitZ >= (1 - spacing);
+
+            if (!up && !down && (left || right))
+            {
+                placement = left ? EnumFacing.WEST : EnumFacing.EAST;
+            }
+            else if (!left && !right && (up || down))
+            {
+                placement = up ? EnumFacing.NORTH : EnumFacing.SOUTH;
+            }
+            else if (!left && !right && !up && !down)
+            {
+                placement = blockSide;
+            }
+            else
+            {
+                placement = blockSide.getOpposite();
+            }
+        }
+        else
+        {
+            boolean z = blockSide.getAxis() == EnumFacing.Axis.Z;
+            boolean right = (z ? hitX : hitZ) <= spacing;
+            boolean left = (z ? hitX : hitZ) >= (1 - spacing);
+
+            boolean up = hitY <= spacing;
+            boolean down = hitY >= (1 - spacing);
+
+            if (!up && !down && (left || right))
+            {
+                if (z)
+                {
+                    placement = left ? EnumFacing.WEST : EnumFacing.EAST;
+                }
+                else
+                {
+                    placement = left ? EnumFacing.NORTH : EnumFacing.SOUTH;
+                }
+            }
+            else if (!left && !right && (up || down))
+            {
+                placement = up ? EnumFacing.UP : EnumFacing.DOWN;
+            }
+            else if (!left && !right && !up && !down)
+            {
+                placement = blockSide;
+            }
+            else
+            {
+                placement = blockSide.getOpposite();
+            }
+        }
+        return placement;
     }
 
     protected boolean postMovementEvents(World world, EntityPlayer player, BlockPos pos, BlockPos newPos, EnumHand hand)
