@@ -22,3 +22,9 @@ eclipse
 run
 
 SBM-Handheld-Piston\.txt
+
+output/
+
+CompiledWith\.txt
+
+changelog\.html
