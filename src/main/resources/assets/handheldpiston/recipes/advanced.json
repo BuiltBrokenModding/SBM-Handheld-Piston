@@ -1,0 +1,20 @@
+{
+  "type": "crafting_shapeless",
+  "group": "stuff",
+  "ingredients": [
+    {
+      "item": "handheldpiston:basic"
+    },
+    {
+      "item": "handheldpiston:sticky"
+    },
+    {
+      "item": "minecraft:ender_pearl"
+    }
+  ],
+  "result": {
+    "item": "handheldpiston:advanced",
+    "data": 0,
+    "count": 1
+  }
+}

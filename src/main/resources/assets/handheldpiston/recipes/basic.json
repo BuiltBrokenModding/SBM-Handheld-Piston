@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " p ",
+    "ara",
+    "aqa"
+  ],
+  "key": {
+    "p": {
+      "item": "minecraft:piston"
+    },
+    "a":{
+      "item": "minecraft:stick"
+	},
+    "r":{
+      "item": "minecraft:redstone"
+    },
+    "q":{
+      "item": "minecraft:quarts"
+    }
+  },
+  "result": {
+    "item": "handheldpiston:basic",
+	"data": 0,
+	"count": 1
+  }
+}
