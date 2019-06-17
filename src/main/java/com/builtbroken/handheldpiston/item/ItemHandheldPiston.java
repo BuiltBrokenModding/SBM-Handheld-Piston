@@ -42,17 +42,21 @@ import java.util.Set;
 
 public class ItemHandheldPiston extends Item
 {
+
     public static final String NBT_MODE = "toolMode";
     public static final String NBT_TICKS = "extendTick";
 
     public final Set<PistonMode> modes = new HashSet();
+    public final boolean inverse;
 
-    public ItemHandheldPiston(ResourceLocation registryName, PistonMode... modes)
+    public ItemHandheldPiston(ResourceLocation registryName, boolean inverse, PistonMode... modes)
     {
         this.setRegistryName(registryName);
         this.setTranslationKey(registryName.toString());
         this.setCreativeTab(CreativeTabs.TOOLS);
         this.setMaxStackSize(1);
+
+        this.inverse = inverse;
 
         for (PistonMode mode : modes)
         {
@@ -88,16 +92,19 @@ public class ItemHandheldPiston extends Item
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
                                       EnumFacing sideHit, float hitX, float hitY, float hitZ)
     {
-
         final ItemStack stack = player.getHeldItem(hand);
         final PistonMode mode = getMode(stack);
-        EnumFacing facing = sideHit;
+        EnumFacing pushDirection = sideHit;
         if (mode == PistonMode.ADVANCED)
         {
-            facing = getPlacement(sideHit, hitX, hitY, hitZ);
+            pushDirection = getPlacement(sideHit, hitX, hitY, hitZ);
+        }
+        else if (inverse)
+        {
+            pushDirection = pushDirection.getOpposite();
         }
 
-        final BlockPos newPos = pos.offset(facing.getOpposite());
+        final BlockPos newPos = pos.offset(pushDirection.getOpposite());
         final IBlockState oldState = world.getBlockState(pos);
         final IBlockState filledState = world.getBlockState(newPos);
 
@@ -111,15 +118,15 @@ public class ItemHandheldPiston extends Item
         if (mode.canPushBlocks)
         {
             //Check if we can push
-            if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, facing))
+            if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, pushDirection))
             {
                 //Do push
-                return this.tryToMoveBlock(player, world, pos, newPos, hand, facing, oldState, filledState);
+                return this.tryToMoveBlock(player, world, pos, newPos, hand, pushDirection, oldState, filledState);
             }
         }
         else if (mode == PistonMode.SELF)
         {
-            Vec3d vector = player.getLookVec().scale(-1).normalize().scale(2); //TODO config
+            Vec3d vector = player.getLookVec().scale(inverse ? 1 : -1).normalize().scale(2); //TODO config
             player.addVelocity(vector.x, vector.y, vector.z);
 
             //audio
@@ -130,7 +137,7 @@ public class ItemHandheldPiston extends Item
         }
         else
         {
-            pushPlayer(world, pos, player, facing, stack, mode);
+            pushPlayer(world, pos, player, pushDirection, stack, mode);
         }
         return EnumActionResult.SUCCESS;
     }
@@ -174,8 +181,8 @@ public class ItemHandheldPiston extends Item
     public void pushPlayer(World world, BlockPos pos, EntityPlayer player, EnumFacing facing, ItemStack pistonStack, PistonMode mode)
     {
         //Movement
-        final Vector3d vector = EntityEvent.getVelocityForPush(facing, player, pistonStack, mode);
-        player.addVelocity(vector.getX(), vector.getY(), vector.getZ());
+        final Vec3d vector = EntityEvent.getVelocityForPush(facing, player).scale(inverse ? 1 : -1);
+        player.addVelocity(vector.x, vector.y, vector.z);
 
         //audio
         world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);

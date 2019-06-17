@@ -1,6 +1,7 @@
 package com.builtbroken.handheldpiston.api;
 
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.Vec3d;
 import net.minecraftforge.fml.common.eventhandler.Cancelable;
 import net.minecraftforge.fml.common.eventhandler.Event;
 
@@ -19,7 +20,7 @@ public class HandheldPistonMoveEvent extends Event
     private final BlockPos oldPos;
 
     @Nullable
-    public Vector3d velocityAdded;
+    public Vec3d velocityAdded;
 
     public PistonMoveType getType()
     {
@@ -39,7 +40,7 @@ public class HandheldPistonMoveEvent extends Event
     }
 
 
-    public HandheldPistonMoveEvent(PistonMoveType type, BlockPos oldPos, BlockPos newPos, Vector3d velocityAdded)
+    public HandheldPistonMoveEvent(PistonMoveType type, BlockPos oldPos, BlockPos newPos, Vec3d velocityAdded)
     {
         this.type = type;
         this.newPos = newPos;

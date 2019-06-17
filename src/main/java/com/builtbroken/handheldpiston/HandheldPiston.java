@@ -54,8 +54,8 @@ public class HandheldPiston
     @SubscribeEvent
     public static void registerItems(RegistryEvent.Register<Item> event)
     {
-        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_BASIC, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
-        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_STICKY, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
-        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_ADVANCED, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF, PistonMode.ADVANCED));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_BASIC, false, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_STICKY, true, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_ADVANCED, false, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF, PistonMode.ADVANCED));
     }
 }
