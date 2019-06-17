@@ -1,7 +1,7 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "handheldpiston:items/handheldpiston"
+    "layer0": "handheldpiston:items/sticky"
   },
   "overrides": [
     {

@@ -1,6 +1,6 @@
 {
   "parent": "minecraft:item/generated",
   "textures": {
-    "layer0": "handheldpiston:items/handheldpiston_extended"
+    "layer0": "handheldpiston:items/advanced_extended"
   }
 }
