@@ -1,0 +1,18 @@
+item.handheldpiston:basic.name=Piston de poche basique
+item.handheldpiston:stkcy.name=Piston de poche collant
+item.handheldpiston:advanced.name=Piston de poche avancé
+
+## Errors
+item.handheldpiston:banned.block.name=Ce bloc ne peut pas être poussé.
+item.handheldpiston:banned.tile.name=Cet entité de bloc ne peut pas être poussée.
+
+## Modes
+item.handheldpiston:mode.all.info=Mode : §bTout
+item.handheldpiston:mode.entity.info=Mode : §eEntités
+item.handheldpiston:mode.self.info=Mode : §cSoi-même
+
+## Details
+item.handheldpiston:more.info=Maintenir §bMAJ§f pour plus
+item.handheldpiston:info=Ajuster paramètres du piston
+item.handheldpiston:use.info=§5En maintenant §bMAJ :
+item.handheldpiston:wheel.info=§bMolette de la souris §5pour changer de mode
