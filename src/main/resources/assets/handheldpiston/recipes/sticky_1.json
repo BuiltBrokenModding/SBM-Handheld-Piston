@@ -1,12 +1,11 @@
 {
-  "type": "crafting_shapeless",
-  "group": "stuff",
+  "type": "minecraft:crafting_shapeless",
   "ingredients": [
     {
       "item": "handheldpiston:basic"
     },
     {
-      "item": "minecraft:slime"
+      "item": "minecraft:slime_ball"
     }
   ],
   "result": {

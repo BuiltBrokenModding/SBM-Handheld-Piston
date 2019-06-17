@@ -7,16 +7,16 @@
   ],
   "key": {
     "p": {
-      "item": "minecraft:piston"
+      "item": "minecraft:sticky_piston"
     },
     "a":{
-      "item": "minecraft:sticky_piston"
+      "item": "minecraft:stick"
 	},
     "r":{
       "item": "minecraft:redstone"
     },
     "q":{
-      "item": "minecraft:quarts"
+      "item": "minecraft:quartz"
     }
   },
   "result": {
