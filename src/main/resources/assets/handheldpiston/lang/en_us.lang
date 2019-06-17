@@ -1,6 +1,6 @@
 item.handheldpiston:basic.name=Basic Hand-held Piston
 item.handheldpiston:stkcy.name=Sticky Hand-held Piston
-item.handheldpiston:advanced.name=Advacned Hand-held Piston
+item.handheldpiston:advanced.name=Advanced Hand-held Piston
 
 ## Errors
 item.handheldpiston:banned.block.name=This block cannot be pushed.
