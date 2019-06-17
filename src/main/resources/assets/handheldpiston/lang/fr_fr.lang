@@ -1,5 +1,5 @@
 item.handheldpiston:basic.name=Piston de poche basique
-item.handheldpiston:stkcy.name=Piston de poche collant
+item.handheldpiston:sticky.name=Piston de poche collant
 item.handheldpiston:advanced.name=Piston de poche avancé
 
 ## Errors
@@ -16,3 +16,4 @@ item.handheldpiston:more.info=Maintenir §bMAJ§f pour plus
 item.handheldpiston:info=Ajuster paramètres du piston
 item.handheldpiston:use.info=§5En maintenant §bMAJ :
 item.handheldpiston:wheel.info=§bMolette de la souris §5pour changer de mode
+
