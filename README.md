@@ -3,7 +3,7 @@ A piston in item form that also pushes entities (and the player if a block canno
 
 # Change Log
 
-## 1.1.0
+## 1.1.0 - 6-17-2019 - MC12
 
 * Added: Sticky logic
 * Added: Recipes
@@ -13,7 +13,7 @@ A piston in item form that also pushes entities (and the player if a block canno
 * Fixed: Translations
 
 
-## 1.0.0
+## 1.0.0 - 6-16-2019 - MC12
 
 * Init release
 * Includes basic, sticky, and advanced piston items
