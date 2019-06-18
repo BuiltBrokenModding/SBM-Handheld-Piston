@@ -1,5 +1,6 @@
 package com.builtbroken.handheldpiston.item;
 
+import com.builtbroken.handheldpiston.HandheldPiston;
 import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
@@ -11,13 +12,13 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerInteractEvent;
+import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
-
-import javax.vecmath.Vector3d;
 
 /**
  * Created by Dark(DarkGuardsman, Robert) on 6/16/2019.
  */
+@Mod.EventBusSubscriber(modid = HandheldPiston.MODID)
 public class EntityEvent
 {
     @SubscribeEvent

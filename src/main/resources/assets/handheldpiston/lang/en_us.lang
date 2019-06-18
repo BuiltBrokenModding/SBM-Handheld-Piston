@@ -10,6 +10,7 @@ item.handheldpiston:banned.tile.name=This tile entity cannot be pushed.
 item.handheldpiston:mode.all.info=Mode: §bAll
 item.handheldpiston:mode.entity.info=Mode: §eEntity
 item.handheldpiston:mode.self.info=Mode: §cSelf
+item.handheldpiston:mode.advanced.info=Mode: §cAdvanced
 
 ## Details
 item.handheldpiston:more.info=Hold §bSHIFT§f for more

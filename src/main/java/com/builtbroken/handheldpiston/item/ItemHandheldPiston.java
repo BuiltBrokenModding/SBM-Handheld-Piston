@@ -180,7 +180,7 @@ public class ItemHandheldPiston extends Item
     public void pushPlayer(World world, BlockPos pos, EntityPlayer player, EnumFacing facing, ItemStack pistonStack, PistonMode mode)
     {
         //Movement
-        final Vec3d vector = EntityEvent.getVelocityForPush(facing, player).scale(inverse ? 1 : -1);
+        final Vec3d vector = EntityEvent.getVelocityForPush(facing, player);
         player.addVelocity(vector.x, vector.y, vector.z);
 
         //audio
