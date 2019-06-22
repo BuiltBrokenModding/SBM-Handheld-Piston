@@ -27,6 +27,7 @@ public class ClientEventHandler
         reg(HandheldPiston.ITEM_BASIC);
         reg(HandheldPiston.ITEM_STICKY);
         reg(HandheldPiston.ITEM_ADVANCED);
+        reg(HandheldPiston.ITEM_CREATIVE);
     }
 
     private static void reg(ResourceLocation name)

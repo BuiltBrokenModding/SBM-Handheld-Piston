@@ -1,7 +1,7 @@
 package com.builtbroken.handheldpiston;
 
 import com.builtbroken.handheldpiston.item.ItemHandheldPiston;
-import com.builtbroken.handheldpiston.item.PistonMode;
+import com.builtbroken.handheldpiston.item.mode.PistonMode;
 import com.builtbroken.handheldpiston.mod.LazyModLoader;
 import com.builtbroken.handheldpiston.mod.ModHandler;
 import com.builtbroken.handheldpiston.mod.vanilla.VanillaHandler;
@@ -36,6 +36,7 @@ public class HandheldPiston
     public static final ResourceLocation ITEM_BASIC = new ResourceLocation(MODID, "basic");
     public static final ResourceLocation ITEM_STICKY = new ResourceLocation(MODID, "sticky");
     public static final ResourceLocation ITEM_ADVANCED = new ResourceLocation(MODID, "advanced");
+    public static final ResourceLocation ITEM_CREATIVE = new ResourceLocation(MODID, "creative");
 
     @EventHandler
     public void preInit(FMLPreInitializationEvent event)
@@ -57,5 +58,6 @@ public class HandheldPiston
         event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_BASIC, false, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
         event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_STICKY, true, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF));
         event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_ADVANCED, false, PistonMode.ALL, PistonMode.ENTITY, PistonMode.SELF, PistonMode.ADVANCED));
+        event.getRegistry().registerAll(new ItemHandheldPiston(ITEM_CREATIVE, false, PistonMode.values()));
     }
 }

@@ -1,0 +1,14 @@
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "handheldpiston:items/creative"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "extending": 1
+      },
+      "model": "handheldpiston:item/creative_extended"
+    }
+  ]
+}

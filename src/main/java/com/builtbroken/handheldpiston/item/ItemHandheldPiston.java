@@ -2,9 +2,10 @@ package com.builtbroken.handheldpiston.item;
 
 import com.builtbroken.handheldpiston.HandheldPiston;
 import com.builtbroken.handheldpiston.api.CanPushResult;
-import com.builtbroken.handheldpiston.api.HandheldPistonMoveEvent;
 import com.builtbroken.handheldpiston.api.Handler;
 import com.builtbroken.handheldpiston.api.HandlerManager;
+import com.builtbroken.handheldpiston.api.events.PistonMoveBlockEvent;
+import com.builtbroken.handheldpiston.item.mode.PistonMode;
 import net.minecraft.block.BlockSnow;
 import net.minecraft.block.material.EnumPushReaction;
 import net.minecraft.block.state.IBlockState;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.GuiScreen;
 import net.minecraft.client.resources.I18n;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.creativetab.CreativeTabs;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -21,6 +23,7 @@ import net.minecraft.item.IItemPropertyGetter;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.network.play.server.SPacketEntityVelocity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.BlockPos;
@@ -91,8 +94,22 @@ public class ItemHandheldPiston extends Item
     public EnumActionResult onItemUse(EntityPlayer player, World world, BlockPos pos, EnumHand hand,
                                       EnumFacing sideHit, float hitX, float hitY, float hitZ)
     {
+        if (world.isRemote)
+        {
+            return EnumActionResult.PASS;
+        }
+
         final ItemStack stack = player.getHeldItem(hand);
+
+        //Fail out if we are already extended
+        if (world.getTotalWorldTime() - getExtendedTime(stack) < 15) //TODO make config driven
+        {
+            return EnumActionResult.FAIL;
+        }
+
         final PistonMode mode = getMode(stack);
+
+        //Get push direction
         EnumFacing pushDirection = sideHit;
         if (mode == PistonMode.ADVANCED)
         {
@@ -103,48 +120,67 @@ public class ItemHandheldPiston extends Item
             pushDirection = pushDirection.getOpposite();
         }
 
-        final BlockPos newPos = pos.offset(pushDirection.getOpposite());
-        final IBlockState oldState = world.getBlockState(pos);
-        final IBlockState filledState = world.getBlockState(newPos);
+        //Try to push using custom mode logic
+        EnumActionResult result = mode.tryPush(this, world, pos, pushDirection, player, hand);
 
-
-        //Fail out if we are already extended
-        if (world.getTotalWorldTime() - getExtendedTime(stack) < 15) //TODO make config driven
+        //Do default logic
+        if (result == EnumActionResult.PASS && mode.canPushBlocks)
         {
-            return EnumActionResult.FAIL;
+            result = doPushLogic(world, pos, pushDirection, player, hand);
         }
 
-        if (mode.canPushBlocks)
+        //As long as we don't skip extend
+        if (result != EnumActionResult.PASS)
         {
-            //Check if we can push
-            if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, pushDirection))
-            {
-                //Do push
-                return this.tryToMoveBlock(player, world, pos, newPos, hand, pushDirection, oldState, filledState);
-            }
+            extend(world, pos, player, hand);
         }
-        else if (mode == PistonMode.SELF)
-        {
-            Vec3d vector = player.getLookVec().scale(inverse ? 1 : -1).normalize().scale(2); //TODO config
-            player.addVelocity(vector.x, vector.y, vector.z);
 
-            //audio
-            world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
-
-            //animation
-            this.setExtended(stack, world);
-        }
-        else
+        //IF we fail push the play backwards
+        if (result == EnumActionResult.FAIL)
         {
-            pushPlayer(world, pos, player, pushDirection, stack, mode);
+            pushPlayer(player, pushDirection);
         }
         return EnumActionResult.SUCCESS;
     }
 
-    protected boolean canTryPush(World world, IBlockState oldState, IBlockState filledState, BlockPos pos, BlockPos newPos, EnumHand hand, EntityPlayer player, EnumFacing facing)
+    public EnumActionResult doPushLogic(World world, BlockPos pos, EnumFacing pushDirection, EntityPlayer player, EnumHand hand)
     {
-        final ItemStack stack = player.getHeldItem(hand);
-        final PistonMode mode = getMode(stack);
+        final BlockPos newPos = pos.offset(pushDirection.getOpposite());
+        final IBlockState oldState = world.getBlockState(pos);
+        final IBlockState filledState = world.getBlockState(newPos);
+
+        //Check if we can push
+        if (this.canTryPush(world, oldState, filledState, pos, newPos, hand, player, pushDirection))
+        {
+            final PistonMoveBlockEvent event = new PistonMoveBlockEvent(world, pos, oldState, pushDirection);
+            if (MinecraftForge.EVENT_BUS.post(event))
+            {
+                return EnumActionResult.FAIL;
+            }
+            return this.tryToMoveBlock(player, world, pos, newPos, pushDirection, event.newState, filledState);
+        }
+        return EnumActionResult.FAIL;
+    }
+
+    public EnumActionResult push3(World world, BlockPos pos, EnumFacing pushDirection, EntityPlayer player, EnumHand hand)
+    {
+        for (int i = 0; i < 3; i++)
+        {
+            EnumActionResult result = doPushLogic(world, pos, pushDirection, player, hand);
+            if (result == EnumActionResult.SUCCESS)
+            {
+                pos = pos.offset(pushDirection.getOpposite());
+            }
+            else
+            {
+                return result;
+            }
+        }
+        return EnumActionResult.SUCCESS;
+    }
+
+    protected boolean canTryPush(World world, IBlockState oldState, IBlockState filledState, BlockPos pos, BlockPos newPos, EnumHand hand, EntityPlayer player, EnumFacing pushDirection)
+    {
         if (newPos.getY() < world.getHeight() && newPos.getY() > 0)
         {
             boolean pushable = (oldState.getPushReaction() == EnumPushReaction.NORMAL || oldState.getPushReaction() == EnumPushReaction.PUSH_ONLY);
@@ -156,38 +192,40 @@ public class ItemHandheldPiston extends Item
                 if (!world.isRemote)
                 {
                     boolean eventsPass = postMovementEvents(world, player, pos, newPos, hand);
-                    boolean canEdit = canEdit(world, oldState, pos, newPos, player, facing, hand);
-                    if (eventsPass && canEdit)
-                    {
-                        HandheldPistonMoveEvent event = new HandheldPistonMoveEvent(HandheldPistonMoveEvent.PistonMoveType.BLOCK, pos, newPos, null);
-                        MinecraftForge.EVENT_BUS.post(event);
-                        if (!event.isCanceled())
-                        {
-                            return true;
-                        }
-                    }
+                    boolean canEdit = canEdit(world, oldState, pos, newPos, player, pushDirection, hand);
+                    return eventsPass && canEdit;
                 }
             }
-            else
-            {
-                pushPlayer(world, pos, player, facing, stack, mode);
-            }
-
         }
         return false;
     }
 
-    public void pushPlayer(World world, BlockPos pos, EntityPlayer player, EnumFacing facing, ItemStack pistonStack, PistonMode mode)
+    public void extend(World world, BlockPos pos, EntityPlayer player, EnumHand hand)
     {
-        //Movement
-        final Vec3d vector = EntityEvent.getVelocityForPush(facing, player);
-        player.addVelocity(vector.x, vector.y, vector.z);
-
-        //audio
+        //Animation
+        this.setExtended(player.getHeldItem(hand), world);
         world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
+    }
 
-        //animation
-        this.setExtended(pistonStack, world);
+    public void applyMotion(Entity target, Vec3d velocity)
+    {
+        target.addVelocity(velocity.x, velocity.y, velocity.z);
+        if (target instanceof EntityPlayerMP)
+        {
+            ((EntityPlayerMP) target).connection.sendPacket(new SPacketEntityVelocity(target));
+        }
+    }
+
+    public EnumActionResult selfModePush(EntityPlayer player)
+    {
+        Vec3d vector = player.getLookVec().scale(inverse ? 1 : -1).normalize().scale(2); //TODO config
+        applyMotion(player, vector);
+        return EnumActionResult.SUCCESS;
+    }
+
+    public void pushPlayer(EntityPlayer player, EnumFacing facing)
+    {
+       applyMotion(player, EntityEvent.getVelocityForPush(facing, player));
     }
 
     public static EnumFacing getPlacement(EnumFacing blockSide, float hitX, float hitY, float hitZ)
@@ -267,18 +305,18 @@ public class ItemHandheldPiston extends Item
         return breakE != -1 && !place.isCanceled();
     }
 
-    protected boolean canEdit(World world, IBlockState state, BlockPos pos, BlockPos newPos, EntityPlayer player, EnumFacing facing, EnumHand hand)
+    protected boolean canEdit(World world, IBlockState state, BlockPos pos, BlockPos newPos, EntityPlayer player, EnumFacing pushDirection, EnumHand hand)
     {
         //Normal edit checks
         boolean place = world.mayPlace(state.getBlock(), newPos, false, EnumFacing.UP, player);
         boolean edit1 = player.canPlayerEdit(newPos, EnumFacing.UP, new ItemStack(state.getBlock()));
-        boolean edit2 = player.canPlayerEdit(pos, facing, player.getHeldItem(hand));
+        boolean edit2 = player.canPlayerEdit(pos, pushDirection, player.getHeldItem(hand));
 
         //Handler override
         final Handler handler = HandlerManager.INSTANCE.getHandler(state.getBlock());
         if (handler != null)
         {
-            final EnumActionResult result = handler.canEdit(world, state, pos, newPos, player, facing, hand, place, edit1, edit2);
+            final EnumActionResult result = handler.canEdit(world, state, pos, newPos, player, pushDirection, hand, place, edit1, edit2);
             if (result != EnumActionResult.PASS)
             {
                 return result == EnumActionResult.SUCCESS;
@@ -289,30 +327,50 @@ public class ItemHandheldPiston extends Item
         return place && edit1 && edit2;
     }
 
-    protected EnumActionResult tryToMoveBlock(EntityPlayer player, World world, BlockPos pos, BlockPos newPos, EnumHand hand, EnumFacing facing, IBlockState oldState, IBlockState filledState)
+    protected EnumActionResult tryToMoveBlock(EntityPlayer player, World world, BlockPos oldPos, BlockPos newPos, EnumFacing pushDirection, IBlockState oldState, IBlockState filledState)
     {
+        final PistonMoveBlockEvent event = new PistonMoveBlockEvent(world, oldPos, oldState, pushDirection);
+        if (MinecraftForge.EVENT_BUS.post(event))
+        {
+            return EnumActionResult.FAIL;
+        }
+        else if(event.getState() != event.newState)
+        {
+            //Kill old
+            world.removeTileEntity(oldPos);
+            world.setBlockToAir(oldPos);
+
+            //Set new
+            world.setBlockState(newPos, event.newState, 3);
+
+            //Trigger updates
+            this.updateEverything(world, oldPos, newPos, oldState, filledState);
+
+            return EnumActionResult.SUCCESS;
+        }
+
         //Check that we can pick up block
-        final CanPushResult result = HandlerManager.INSTANCE.canPush(world, pos);
+        final CanPushResult result = HandlerManager.INSTANCE.canPush(world, oldPos);
         if (result == CanPushResult.CAN_PUSH || result == CanPushResult.NO_TILE)
         {
             if (oldState.getPushReaction() == EnumPushReaction.DESTROY)
             {
                 float chance = oldState.getBlock() instanceof BlockSnow ? -1.0f : 1.0f;
-                oldState.getBlock().dropBlockAsItemWithChance(world, pos, oldState, chance, 0);
-                world.setBlockToAir(pos);
-                world.notifyNeighborsOfStateChange(pos, oldState.getBlock(), true);
+                oldState.getBlock().dropBlockAsItemWithChance(world, oldPos, oldState, chance, 0);
+                world.setBlockToAir(oldPos);
+                world.notifyNeighborsOfStateChange(oldPos, oldState.getBlock(), true);
             }
             else
             {
                 final Handler handler = HandlerManager.INSTANCE.getHandler(oldState.getBlock());
 
                 //Pre handling
-                NBTTagCompound data = handler != null ? handler.preMoveBlock(player, world, pos, newPos) : null;
+                NBTTagCompound data = handler != null ? handler.preMoveBlock(player, world, oldPos, newPos) : null;
 
                 //Copy tile data
                 if (result != CanPushResult.NO_TILE)
                 {
-                    final TileEntity oldTile = world.getTileEntity(pos);
+                    final TileEntity oldTile = world.getTileEntity(oldPos);
                     //Copy tile data
                     final NBTTagCompound compound = new NBTTagCompound();
                     oldTile.writeToNBT(compound);
@@ -323,8 +381,8 @@ public class ItemHandheldPiston extends Item
                     compound.removeTag("z");
 
                     //Kill old
-                    world.removeTileEntity(pos);
-                    world.setBlockToAir(pos);
+                    world.removeTileEntity(oldPos);
+                    world.setBlockToAir(oldPos);
 
                     //Place new
                     world.setBlockState(newPos, oldState);
@@ -345,23 +403,19 @@ public class ItemHandheldPiston extends Item
                 }
                 else
                 {
-                    world.setBlockToAir(pos);
+                    world.setBlockToAir(oldPos);
                     world.setBlockState(newPos, oldState);
                 }
 
                 //Post handling
                 if (handler != null)
                 {
-                    handler.postMoveBlock(player, world, pos, newPos, data != null ? data : new NBTTagCompound());
+                    handler.postMoveBlock(player, world, oldPos, newPos, data != null ? data : new NBTTagCompound());
                 }
             }
 
             //Trigger updates
-            this.updateEverything(world, pos, newPos, oldState, filledState);
-
-            //Animation
-            this.setExtended(player.getHeldItem(hand), world);
-            world.playSound((EntityPlayer) null, pos, SoundEvents.BLOCK_PISTON_EXTEND, SoundCategory.BLOCKS, 0.5F, world.rand.nextFloat() * 0.25F + 0.6F);
+            this.updateEverything(world, oldPos, newPos, oldState, filledState);
 
             return EnumActionResult.SUCCESS;
         }
